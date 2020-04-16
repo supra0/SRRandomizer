@@ -12,13 +12,15 @@ Note that this is a **work in progress** and not yet suitable for release.
  * Randomize largo spawns
  * Randomize plort market
  * Randomize upgrade prices
+ * Randomize upgrade increments
  * Randomize crates
  * Randomize trades
  * Randomize plort drops
  * Randomize hen spawns
+ * Randomize Lucky slime payout
  * Randomize gordo snares
  * Randomize extractor drops
- * Randomize gadget resource requirements
+ * Randomize gadget resource requirements?
  * Randomize treasure pod loot?
 
 ---
