@@ -7,13 +7,19 @@ Note that this is a **work in progress** and not yet suitable for release.
  
  ## Planned Features (roughly in order of priority)
  * Randomize crops
- * Randomize gordos
+ * Randomize gordos (including food requirement)
+ * Randomize slime diets
+ * Randomize largo spawns
  * Randomize plort market
+ * Randomize upgrade prices
  * Randomize crates
  * Randomize trades
  * Randomize plort drops
- 
- **Note**: I'm not sure how many of these are feasible, these are more or less just ideas
+ * Randomize hen spawns
+ * Randomize gordo snares
+ * Randomize extractor drops
+ * Randomize gadget resource requirements
+ * Randomize treasure pod loot?
 
 ---
 ## Installation
