@@ -5,12 +5,23 @@ Note that this is a **work in progress** and not yet suitable for release.
  ## Features
  * Randomize the types of Slimes that spawn with 3 different settings.
  
- ## Planned Features
- * Manually set seed for consistent randomization
+ ## Planned Features (roughly in order of priority)
  * Randomize crops
- * Randomize plort drops
+ * Randomize gordos (including food requirement)
+ * Randomize slime diets
+ * Randomize largo spawns
  * Randomize plort market
- * And more...
+ * Randomize upgrade prices
+ * Randomize upgrade increments
+ * Randomize crates
+ * Randomize trades
+ * Randomize plort drops
+ * Randomize hen spawns
+ * Randomize Lucky slime payout
+ * Randomize gordo snares
+ * Randomize extractor drops
+ * Randomize gadget resource requirements?
+ * Randomize treasure pod loot?
 
 ---
 ## Installation
