@@ -47,6 +47,11 @@
       <Private>False</Private>
       <SpecificVersion>false</SpecificVersion>
     </Reference>
+	<Reference Include="UnityEngine.IMGUIModule">
+	  <HintPath>$(GamePath)$(ManagedFolder)UnityEngine.IMGUIModule.dll</HintPath>
+	  <Private>False</Private>
+	  <SpecificVersion>false</SpecificVersion>
+	</Reference>
     <Reference Include="0Harmony">
       <HintPath>$(GamePath)uModFramework\Lib\net462\0Harmony.dll</HintPath>
       <Private>False</Private>

@@ -7,6 +7,8 @@ namespace SRRandomizer
     {
         private static readonly string configVersion = "0.1";
 
+        public static int slimeRandomizeMode;
+
         internal static void Load()
         {
             SRRandomizer.Log("Loading settings.");
@@ -30,9 +32,9 @@ namespace SRRandomizer
                     cfg.Write("ConfigVersion", new UMFConfigString(configVersion));
 
                     SRRandomizer.Log("Finished UMF Settings.");
-
-                    //my settings here
                     
+                    //keybind to bring up menu?
+
                     SRRandomizer.Log("Finished loading settings.");
                 }
             }
