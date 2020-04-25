@@ -1,17 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
+using System.Reflection.Emit;
+using System.Collections.Generic;
+using UnityEngine;
+using HarmonyLib;
+using MonomiPark.SlimeRancher.DataModel;
 
 namespace SRRandomizer.Patches
 {
+    [HarmonyPatch(typeof(GameModel))]
+    [HarmonyPatch("RegisterResourceSpawner")]
     class Patch_ReplaceProduce
     {
-        //hijack GameModel.RegisterResourceSpawner
-        //SpawnResource.SpawnMetadata.prefab
+        static void Prefix(ref SpawnResourceModel.Participant part)
+        {
+            if(!(part is SpawnResource))
+            {
+                return;
+            }
 
-        //alternatively, hijack SpawnResource.Spawn
-        //which one gives me more flexibility?
+            SpawnResource sr = (SpawnResource)part;
+
+            for(int i = 0; i < sr.ObjectsToSpawn.Length; i++)
+            {
+                sr.ObjectsToSpawn[i] = SRRandomizer.GetRandomizedProduce(sr.ObjectsToSpawn[i]);
+            }
+        }
     }
 }

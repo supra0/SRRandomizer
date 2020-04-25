@@ -1,1 +1,9 @@
-This will definitely work!
+Note: This is an early release. It is unpolished and may have bugs.
+
+Change randomizer settings in the menu on the right and click "Apply Settings" when finished.
+Randomizer settings can only be changed on the Main Menu.
+
+Type "help srr" in the UMF console to see information about this mod's commands.
+
+Version 0.1
+- First release of the Slime Rancher Randomizer
