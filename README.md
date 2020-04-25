@@ -1,5 +1,6 @@
 # SRRandomizer
-Note that this is a **work in progress** and not yet suitable for release.
+Note that this is a **work in progress** and not yet suitable for release.    
+The safety of your save files cannot be guaranteed, use this software at your own risk.
 
 ---
  ## Features
