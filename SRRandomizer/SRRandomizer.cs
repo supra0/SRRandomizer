@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace SRRandomizer
 {
-    [UMFHarmony(3)] //Set this to the number of harmony patches in your mod.
+    [UMFHarmony(2)]
     [UMFScript]
     class SRRandomizer : MonoBehaviour
     {
@@ -24,7 +24,11 @@ namespace SRRandomizer
         private static Vector2 scrollViewPosition = Vector2.zero;
 
         private static readonly string windowTitle = "Randomizer Options";
-        private static readonly string[] modeSelectionTexts = { "Disabled", "Chaotic", "Mapped", "Mapped (Dupes)" };
+        private static readonly GUIContent disabledContent = new GUIContent { image = null, text = "Disabled", tooltip = "Disable randomization for this tab." };
+        private static readonly GUIContent chaoticContent = new GUIContent { image = null, text = "Chaotic", tooltip = "Every object is completely randomized." };
+        private static readonly GUIContent mappedContent = new GUIContent { image = null, text = "1-to-1 Replacement", tooltip = "Every object type is replaced with another, with every type being represented exactly once." };
+        private static readonly GUIContent mappedDupesContent = new GUIContent { image = null, text = "?-to-? Replacement", tooltip = "Every object type is replaced with another, but duplicates are allowed. Not all types may be represented." };
+        private static readonly GUIContent[] selectionContents = {disabledContent, chaoticContent, mappedContent, mappedDupesContent};
         private static readonly string[] toolbarTabTexts = { "Slimes", "Gordos", "Produce" };
 
         private static int currentToolbarTab;
@@ -49,13 +53,6 @@ namespace SRRandomizer
 
         private static SlimeDefinitions vanillaSlimeDefinitions;
         private static SlimeDefinitions randomizedSlimeDefinitions;
-
-        /* Gordo Options */
-        private bool randomizeFoodReq;
-        private int randomFoodMax = 50;
-
-        private static Dictionary<String, Identifiable.Id> gordoPrefabToId;
-        private static Dictionary<Identifiable.Id, Identifiable.Id> gordoMap;
 
         /* Produce Options */
         public static RandomMode produceRandomMode = RandomMode.DISABLED;
@@ -116,8 +113,8 @@ namespace SRRandomizer
             GUI.skin.textField.fontSize = 16;
             GUI.skin.label.fontSize = 16;
             GUI.skin.toggle.fontSize = 16;
-            
-            //GUI.DragWindow();
+
+            //GUI.DragWindow(); doesn't work for some reason, just makes all button non interactable
 
             //Toolbar tabs
             int tempTabValue = GUILayout.Toolbar(currentToolbarTab, toolbarTabTexts);
@@ -136,7 +133,7 @@ namespace SRRandomizer
 
                     GUILayout.BeginVertical(GUILayout.Width(100));
                     GUILayout.Label("Randomization Mode");
-                    slimeRandomModeInput = GUILayout.SelectionGrid(slimeRandomModeInput, modeSelectionTexts, 1);
+                    slimeRandomModeInput = GUILayout.SelectionGrid(slimeRandomModeInput, selectionContents, 1);
                     GUILayout.EndVertical();
 
                     scrollViewPosition = GUILayout.BeginScrollView(scrollViewPosition);
@@ -153,21 +150,7 @@ namespace SRRandomizer
                     break;
                 case 1: //gordos
                     GUILayout.BeginHorizontal(GUILayout.Height(windowSizeY * 0.8f));
-
-                    GUILayout.BeginVertical(GUILayout.Width(100));
-                    GUILayout.Label("Only Mapped mode is currently supported for Gordos");
-                    GUI.enabled = false;
-                    GUILayout.SelectionGrid(2, modeSelectionTexts, 1);
-                    GUI.enabled = true;
-                    GUILayout.EndVertical();
-
-                    scrollViewPosition = GUILayout.BeginScrollView(scrollViewPosition);
-                    randomizeFoodReq = GUILayout.Toggle(randomizeFoodReq, "Randomize the amount of food required to pop each Gordo");
-                    if (!randomizeFoodReq) GUI.enabled = false;
-                    randomFoodMax = (int) GUILayout.HorizontalSlider(randomFoodMax, 1.0f, 100f);
-                    GUILayout.Label(randomFoodMax.ToString());
-                    GUI.enabled = true;
-                    GUILayout.EndScrollView();
+                    GUILayout.Label("Currently unsupported - work in progress");
                     GUILayout.EndHorizontal();
                     break;
                 case 2: //produce
@@ -175,7 +158,8 @@ namespace SRRandomizer
 
                     GUILayout.BeginVertical(GUILayout.Width(100));
                     GUILayout.Label("Randomization Mode");
-                    produceRandomModeInput = GUILayout.SelectionGrid(produceRandomModeInput, modeSelectionTexts, 1);
+                    produceRandomModeInput = GUILayout.SelectionGrid(produceRandomModeInput, selectionContents, 1);
+                    GUILayout.Label(GUI.tooltip);
                     GUILayout.EndVertical();
 
                     scrollViewPosition = GUILayout.BeginScrollView(scrollViewPosition);
@@ -455,7 +439,7 @@ namespace SRRandomizer
 
         public static GameObject GetRandomizedSlime(GameObject prefab) //currently no largo support, in future this will be added here
         {
-            if(!slimePrefabToId.ContainsKey(prefab.ToString())) //this slime is a largo. for now just return it
+            if(slimePrefabToId != null && !slimePrefabToId.ContainsKey(prefab.ToString())) //this slime is a largo. for now just return it
             {
                 return prefab;
             }
@@ -485,9 +469,9 @@ namespace SRRandomizer
 
         public static GameObject GetRandomizedProduce(GameObject prefab)
         {
-            if (!producePrefabToId.ContainsKey(prefab.ToString())) //this... isn't produce? just return it to avoid causing issues
+            if (producePrefabToId != null && !producePrefabToId.ContainsKey(prefab.ToString())) //this... isn't produce? just return it to avoid causing issues
             {
-                Log("Non-produce prefab received in GetRandomizedProduce: " + prefab.ToString());
+                //Log("Non-produce prefab received in GetRandomizedProduce: " + prefab.ToString());
                 return prefab;
             }
 

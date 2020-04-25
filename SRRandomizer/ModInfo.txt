@@ -6,4 +6,4 @@ Randomizer settings can only be changed on the Main Menu.
 Type "help srr" in the UMF console to see information about this mod's commands.
 
 Version 0.1
-- First release of the Slime Rancher Randomizer
+- First "Preview" release of the Slime Rancher Randomizer

@@ -15,6 +15,11 @@ namespace SRRandomizer.Patches
     {
         static void Prefix(ref SpawnResourceModel.Participant part)
         {
+            if(SRRandomizer.produceRandomMode == RandomMode.DISABLED)
+            {
+                return;
+            }
+
             if(!(part is SpawnResource))
             {
                 return;
