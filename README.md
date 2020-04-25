@@ -1,4 +1,4 @@
-# SRRandomizer
+# Slime Rancher Randomizer Mod
 Note that this is a **work in progress** and not yet suitable for release.    
 The safety of your save files cannot be guaranteed, use this mod at your own risk.
 
