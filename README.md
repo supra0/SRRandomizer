@@ -7,10 +7,10 @@ The safety of your save files cannot be guaranteed, use this software at your ow
  * Randomize the following game elements:
      - Slime types
      - Produce types
-     - Gordos
  * 3 different randomization modes with many options
  
  ## Planned Features (roughly in order of priority)
+ * Randomize Gordos
  * Randomize Largo spawns
  * Randomize Slime properties
      - Diets
