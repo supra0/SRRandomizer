@@ -3,6 +3,9 @@ Note: This is an early release. It is unpolished and may have bugs.
 Change randomizer settings in the menu on the right and click "Apply Settings" when finished.
 Randomizer settings can only be changed on the Main Menu.
 
+The game currently unrandomizes each time you close it.
+Write down your seed and settings if you are doing a playthrough!
+
 Type "help srr" in the UMF console to see information about this mod's commands.
 
 Version 0.1

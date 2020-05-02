@@ -11,13 +11,20 @@ namespace SRRandomizer
     [UMFScript]
     class SRRandomizer : MonoBehaviour
     {
+
+        #region General Variables
+
         private static LookupDirector lookupDirector;
 
-        /* Randomization */
+        #endregion
+        #region  Randomization Variables
+
         private static int randomSeed;
         private static System.Random runTimeRand; //System.Random object used during runtime after random tables are setup. used for randomization mode 1 ("Chaotic")
 
-        /* GUI */
+        #endregion
+        #region GUI Variables
+
         private static readonly int windowSizeX = 600;
         private static readonly int windowSizeY = 450;
         private static Rect windowRect = new Rect(Screen.width - windowSizeX, (Screen.height / 2) - (windowSizeY / 2), windowSizeX, windowSizeY); //right edge of screen, middle vertically
@@ -35,8 +42,10 @@ namespace SRRandomizer
         private static string seedInput;
         private int slimeRandomModeInput;
         private int produceRandomModeInput;
-        
-        /* Slime Options */
+
+        #endregion
+        #region Slime Options Variables
+
         public static RandomMode slimeRandomMode = RandomMode.DISABLED;
         private bool allowLuckySlimes;
         private bool allowGoldSlimes;
@@ -54,7 +63,9 @@ namespace SRRandomizer
         private static SlimeDefinitions vanillaSlimeDefinitions;
         private static SlimeDefinitions randomizedSlimeDefinitions;
 
-        /* Produce Options */
+        #endregion
+        #region  Produce Options Variables
+
         public static RandomMode produceRandomMode = RandomMode.DISABLED;
         private bool allowGildedGinger;
         private bool allowKookadoba;
@@ -67,6 +78,10 @@ namespace SRRandomizer
         private static List<Identifiable.Id> allowedVeggies;
         private static Dictionary<Identifiable.Id, Identifiable.Id> produceMap;
 
+        #endregion
+
+
+        #region UMF & Startup
 
         internal static void Log(string text, bool clean = false)
         {
@@ -94,6 +109,30 @@ namespace SRRandomizer
             UMFGUI.RegisterCommand("srr_printproducemap", "srr_printproducemap", new string[] { "printproducemap" }, 0, "Prints the current random produce map.", CommandPrintProduceMap);
             UMFGUI.RegisterCommand("srr_loadprefabs", "srr_loadprefabs", new string[] { "loadprefabs" }, 0, "Temp command, load prefab table", CommandLoadPrefabs);
         }
+
+        private void CommandLoadPrefabs() //load the prefab maps we need for randomization
+        {
+            lookupDirector = SRSingleton<GameContext>.Instance.LookupDirector;
+
+            var slimes = Identifiable.SLIME_CLASS;
+            slimePrefabToId = new Dictionary<String, Identifiable.Id>();
+            foreach (Identifiable.Id id in slimes)
+            {
+                slimePrefabToId.Add(lookupDirector.GetPrefab(id).ToString(), id);
+            }
+
+            var produce = Identifiable.FRUIT_CLASS.ToList();
+            produce.AddRange(Identifiable.VEGGIE_CLASS);
+            producePrefabToId = new Dictionary<string, Identifiable.Id>();
+            foreach (Identifiable.Id id in produce)
+            {
+                producePrefabToId.Add(lookupDirector.GetPrefab(id).ToString(), id);
+            }
+        }
+
+        #endregion
+
+        #region GUI
 
         void OnGUI()
         {
@@ -197,25 +236,9 @@ namespace SRRandomizer
             GUILayout.EndHorizontal();
         }
 
-        private void CommandLoadPrefabs() //load the prefab maps we need for randomization
-        {
-            lookupDirector = SRSingleton<GameContext>.Instance.LookupDirector;
+        #endregion
 
-            var slimes = Identifiable.SLIME_CLASS;
-            slimePrefabToId = new Dictionary<String, Identifiable.Id>();
-            foreach (Identifiable.Id id in slimes)
-            {
-                slimePrefabToId.Add(lookupDirector.GetPrefab(id).ToString(), id);
-            }
-
-            var produce = Identifiable.FRUIT_CLASS.ToList();
-            produce.AddRange(Identifiable.VEGGIE_CLASS);
-            producePrefabToId = new Dictionary<string, Identifiable.Id>();
-            foreach (Identifiable.Id id in produce)
-            {
-                producePrefabToId.Add(lookupDirector.GetPrefab(id).ToString(), id);
-            }
-        }
+        #region Pause
 
         public static void Pause(bool pause)
         {
@@ -233,10 +256,9 @@ namespace SRRandomizer
             else timeDirector.Unpause();
         }
 
-        void Update()
-        {
-            //not needed right now
-        }
+        #endregion
+
+        #region Info Commands
 
         private void CommandListSlimes()
         {
@@ -271,6 +293,10 @@ namespace SRRandomizer
                 Log("Original: " + item.Key.ToString() + ", Replacement: " + item.Value.ToString());
             }
         }
+
+        #endregion
+
+        #region Randomization
 
         //Takes a seed and sets up everything for randomization
         private void ApplyRandomization(int seed)
@@ -407,7 +433,7 @@ namespace SRRandomizer
         }
 
         // Creates a random mapping of the elements in idList and puts it into mapDict
-        private void CreateRandomMapping(List<Identifiable.Id> idList, Dictionary<Identifiable.Id, Identifiable.Id> mapDict, System.Random rand, bool allowDupes = false)
+        private void CreateRandomMapping(List<Identifiable.Id> idList, Dictionary<Identifiable.Id, Identifiable.Id> mapDict, System.Random rand, bool allowDupes = false, bool allowSame = false)
         {
             if (!allowDupes)
             {
@@ -430,12 +456,16 @@ namespace SRRandomizer
             }
             else
             {
-                foreach(Identifiable.Id id in idList)
+                foreach (Identifiable.Id id in idList)
                 {
                     mapDict.Add(id, idList[rand.Next(idList.Count())]);
                 }
             }
         }
+
+        #endregion
+        
+        #region Loading Randomized Objects
 
         public static GameObject GetRandomizedSlime(GameObject prefab) //currently no largo support, in future this will be added here
         {
@@ -501,6 +531,18 @@ namespace SRRandomizer
         {
             return null;
         }
+
+        #endregion
+
+
+
+
+
+        void Update()
+        {
+            //not needed right now
+        }
+
     }
 
     public enum RandomMode
