@@ -3,30 +3,16 @@ Note that this is a **work in progress** and not yet suitable for release.
 The safety of your save files cannot be guaranteed, use this mod at your own risk.
 
 ---
- ## Features
- * Randomize the following game elements:
-     - Slime types
-     - Produce types
- * 3 different randomization modes with many options
- 
- ## Planned Features (roughly in order of priority)
- * Randomize Gordos
- * Randomize Largo spawns
- * Randomize Slime properties
-     - Diets
-     - Plort drops
-     - Hazards, behaviors, etc.  
- * Randomize plort market
- * Randomize upgrade prices
- * Randomize upgrade increments
- * Randomize crates
- * Randomize trades
- * Randomize hen spawns
- * Randomize Lucky slime payout
- * Randomize gordo snares
- * Randomize extractor drops
- * Randomize gadget resource requirements?
- * Randomize treasure pod loot?
+# Features
+Randomize the following game elements:
+* Slime types
+* Produce types
+* Slime diets
+* Gordo food requirement
+
+Plus, 3 different randomization modes and many options.
+
+More features will be added as development continues.
 
 ---
 ## Installation
