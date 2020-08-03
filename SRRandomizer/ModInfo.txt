@@ -8,5 +8,11 @@ Write down your seed and settings if you are doing a playthrough!
 
 Type "help srr" in the UMF console to see information about this mod's commands.
 
+Version 0.2
+- Added Gordo food requirement randomization
+- Added Diet randomization
+- Fixed Produce randomization always affecting garden plots on the Ranch
+- Minor refactoring
+
 Version 0.1
 - First "Preview" release of the Slime Rancher Randomizer

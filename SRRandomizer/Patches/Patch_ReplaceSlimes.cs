@@ -15,7 +15,7 @@ namespace SRRandomizer.Patches
     {
         static void Prefix(ref DirectedSlimeSpawner spawner)
         {
-            if(SRRandomizer.slimeRandomMode != RandomMode.DISABLED)
+            if(SRRandomizer.slime_randomMode != RandomMode.DISABLED)
             {
                 foreach (DirectedSlimeSpawner.SpawnConstraint constraint in spawner.constraints)
                 {
