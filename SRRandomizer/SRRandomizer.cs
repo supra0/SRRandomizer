@@ -407,6 +407,11 @@ namespace SRRandomizer
 
         private void RandomizeSlimeDiets(System.Random rand)
         {
+            if(!diet_enabled)
+            {
+                return;
+            }
+
             // Build list of food items that cannot be set as favorite //
             List<Identifiable.Id> restrictedFavorites = new List<Identifiable.Id>();
             if (!diet_allowElderFavorite)

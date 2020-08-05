@@ -8,6 +8,9 @@ Write down your seed and settings if you are doing a playthrough!
 
 Type "help srr" in the UMF console to see information about this mod's commands.
 
+Version 0.2.1
+- Fixed diet randomization being applied even when disabled
+
 Version 0.2
 - Added Gordo food requirement randomization
 - Added Diet randomization
