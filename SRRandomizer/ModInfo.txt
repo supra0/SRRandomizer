@@ -1,12 +1,26 @@
 Note: This is an early release. It is unpolished and may have bugs.
 
-Change randomizer settings in the menu on the right and click "Apply Settings" when finished.
 Randomizer settings can only be changed on the Main Menu.
 
 The game currently unrandomizes each time you close it.
 Write down your seed and settings if you are doing a playthrough!
 
 Type "help srr" in the UMF console to see information about this mod's commands.
+
+Patch Notes:
+(See the releases page on Github for formatted patch notes)
+
+Version 0.3
+x- Added option to display amount of food required by a Gordo when looking at it
+x- Added plort statue randomization
+x- Added option to ensure it is possible to complete the game without glitches (i.e. you will always have access to the slimes neccessary to open the plort statues)
+x- Added wild largo randomization
+x- Added option to randomly decide if any wild largo is feral
+
+x- Food shot into a garden no longer changes to a different type of food (but there's a new setting that optionally preserves this behavior, off by default)
+x- Slimes spawned by firestorms now affected by slime randomization
+- Settings window is now draggable
+- Restructured codebase to make future updates easier and to work towards saveable options and presets
 
 Version 0.2.1
 - Fixed diet randomization being applied even when disabled

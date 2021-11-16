@@ -15,14 +15,14 @@ namespace SRRandomizer.Patches
     {
         static void Prefix(ref DirectedSlimeSpawner spawner)
         {
-            if(SRRandomizer.slime_randomMode != RandomMode.DISABLED)
+            if(SRRandomizer.slimeRandomizer.randomMode != RandomMode.DISABLED)
             {
                 foreach (DirectedSlimeSpawner.SpawnConstraint constraint in spawner.constraints)
                 {
                     foreach (SlimeSet.Member slimeSetMember in constraint.slimeset.members)
                     {
                         //SRRandomizer.Log(slimeSetMember.prefab.ToString());
-                        slimeSetMember.prefab = SRRandomizer.GetRandomizedSlime(slimeSetMember.prefab);
+                        slimeSetMember.prefab = SRRandomizer.slimeRandomizer.GetRandomizedSlime(slimeSetMember.prefab);
                     }
                 }
             }

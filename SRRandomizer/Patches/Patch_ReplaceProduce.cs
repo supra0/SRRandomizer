@@ -15,7 +15,7 @@ namespace SRRandomizer.Patches
     {
         static void Prefix(ref SpawnResourceModel.Participant part)
         {
-            if(SRRandomizer.produce_randomMode == RandomMode.DISABLED)
+            if(SRRandomizer.produceRandomizer.randomMode == RandomMode.DISABLED)
             {
                 return;
             }
@@ -29,7 +29,7 @@ namespace SRRandomizer.Patches
 
             for(int i = 0; i < sr.ObjectsToSpawn.Length; i++)
             {
-                sr.ObjectsToSpawn[i] = SRRandomizer.GetRandomizedProduce(sr.ObjectsToSpawn[i]);
+                sr.ObjectsToSpawn[i] = SRRandomizer.produceRandomizer.GetRandomizedProduce(sr.ObjectsToSpawn[i]);
             }
         }
     }

@@ -21,7 +21,12 @@ namespace SRRandomizer
         #region  Randomization Variables
 
         private static int randomSeed;
-        private static System.Random runTimeRand; //System.Random object used during runtime after random tables are setup. used for randomization mode 1 ("Chaotic")
+        private static System.Random runtimeRand; //System.Random object used during runtime after random tables are setup. used for randomization mode 1 ("Chaotic")
+
+        public static SlimeRandomizer slimeRandomizer;
+        public static ProduceRandomizer produceRandomizer;
+        public static SlimeDietRandomizer slimeDietRandomizer;
+        public static GordoRandomizer gordoRandomizer;
 
         #endregion
         #region GUI Variables
@@ -43,58 +48,8 @@ namespace SRRandomizer
         private static string seedInput;
         private int slimeRandomModeInput;
         private int produceRandomModeInput;
-
-        #endregion
-        #region Slime Options Variables
-
-        public static RandomMode slime_randomMode = RandomMode.DISABLED;
-        private bool slime_allowLuckySlimes;
-        private bool slime_allowGoldSlimes;
-        private bool slime_allowSaberSlimes;
-        private bool slime_allowQuicksilverSlimes;
-        private bool slime_allowGlitchSlimes;
-        private bool slime_allowTarr;
-        private bool slime_allowGlitchTarr;
-
-        private static Dictionary<String, Identifiable.Id> slimePrefabToId; //mapping of slime prefabs to Ids
-        private static List<Identifiable.Id> allowedSlimes; //list of slimes that are allowed to be replaced by the randomizer
-        private static Dictionary<Identifiable.Id, Identifiable.Id> slimeMap; //mapping of each slime type to another (used for replacement by randomizer)
-
-        #endregion
-        #region Gordo Options Variables
-
+        private bool dietEnabled;
         public static bool gordo_randomizeFoodRequirement;
-        public static int gordo_minFoodRequirement = 1;
-        public static int gordo_maxFoodRequirement = 100;
-
-        #endregion
-        #region Diet Options Variables
-
-        public static RandomMode diet_RandomMode = RandomMode.DISABLED;
-        public static readonly SlimeEat.FoodGroup[] VALID_FOOD_GROUPS = {SlimeEat.FoodGroup.FRUIT, SlimeEat.FoodGroup.MEAT, SlimeEat.FoodGroup.VEGGIES};
-        public bool diet_enabled;
-        public bool diet_changePinkSlimeDiet;
-        public bool diet_changeGoldSlimeDiet;
-        public bool diet_changeLuckySlimeDiet;
-        public bool diet_allowElderFavorite;
-        public bool diet_allowKookadobaFavorite;
-        public bool diet_allowGildedGingerFavorite;
-        public bool diet_allowTofuFavorite;
-
-        #endregion
-        #region Produce Options Variables
-
-        public static RandomMode produce_randomMode = RandomMode.DISABLED;
-        private bool produce_allowGildedGinger;
-        private bool produce_allowKookadoba;
-        private static bool produce_allowFruitToVeggie;
-        private static bool produce_allowVeggieToFruit;
-
-        private static Dictionary<String, Identifiable.Id> producePrefabToId;
-        private static List<Identifiable.Id> allowedProduce;
-        private static List<Identifiable.Id> allowedFruits;
-        private static List<Identifiable.Id> allowedVeggies;
-        private static Dictionary<Identifiable.Id, Identifiable.Id> produceMap;
 
         #endregion
 
@@ -124,29 +79,28 @@ namespace SRRandomizer
             UMFGUI.RegisterCommand("srr_listslimes", "srr_listslimes", new string[] { "listslimes" }, 0, "Test command, prints all slime types.", CommandListSlimes);
             UMFGUI.RegisterCommand("srr_printslimemap", "srr_printslimemap", new string[] { "printslimemap" }, 0, "Prints the current random slime map.", CommandPrintSlimeMap);
             UMFGUI.RegisterCommand("srr_printproducemap", "srr_printproducemap", new string[] { "printproducemap" }, 0, "Prints the current random produce map.", CommandPrintProduceMap);
-            UMFGUI.RegisterCommand("srr_loadprefabs", "srr_loadprefabs", new string[] { "loadprefabs" }, 0, "Temp command, load prefab table", CommandLoadPrefabs);
+
+            slimeRandomizer = new SlimeRandomizer();
+            slimeDietRandomizer = new SlimeDietRandomizer();
+            produceRandomizer = new ProduceRandomizer();
+            gordoRandomizer = new GordoRandomizer();
         }
 
-        private void CommandLoadPrefabs() //load the prefab maps we need for randomization
+        public static void Pause(bool pause)
         {
-            lookupDirector = SRSingleton<GameContext>.Instance.LookupDirector;
-
-            var slimes = Identifiable.SLIME_CLASS;
-            slimePrefabToId = new Dictionary<String, Identifiable.Id>();
-            foreach (Identifiable.Id id in slimes)
+            TimeDirector timeDirector = null;
+            try
             {
-                slimePrefabToId.Add(lookupDirector.GetPrefab(id).ToString(), id);
+                timeDirector = SRSingleton<SceneContext>.Instance.TimeDirector;
             }
-
-            var produce = Identifiable.FRUIT_CLASS.ToList();
-            produce.AddRange(Identifiable.VEGGIE_CLASS);
-            producePrefabToId = new Dictionary<string, Identifiable.Id>();
-            foreach (Identifiable.Id id in produce)
+            catch { }
+            if (!timeDirector) return;
+            if (pause)
             {
-                producePrefabToId.Add(lookupDirector.GetPrefab(id).ToString(), id);
+                if (!timeDirector.HasPauser()) timeDirector.Pause();
             }
+            else timeDirector.Unpause();
         }
-
         #endregion
 
         #region GUI
@@ -170,8 +124,6 @@ namespace SRRandomizer
             GUI.skin.label.fontSize = 16;
             GUI.skin.toggle.fontSize = 16;
 
-            //GUI.DragWindow(); doesn't work for some reason, just makes all button non interactable
-
             //Toolbar tabs
             int tempTabValue = GUILayout.Toolbar(currentToolbarTab, toolbarTabTexts);
             if(currentToolbarTab != tempTabValue) //if the tab has changed, reset the scrollbar position
@@ -194,17 +146,18 @@ namespace SRRandomizer
 
                     scrollViewPosition = GUILayout.BeginScrollView(scrollViewPosition);
 
-                    slime_allowLuckySlimes = GUILayout.Toggle(slime_allowLuckySlimes, "Allow Lucky Slimes in the pool");
-                    slime_allowGoldSlimes = GUILayout.Toggle(slime_allowGoldSlimes, "Allow Gold Slimes in the pool");
-                    slime_allowSaberSlimes = GUILayout.Toggle(slime_allowSaberSlimes, "Allow Saber Slimes in the pool");
-                    slime_allowQuicksilverSlimes = GUILayout.Toggle(slime_allowQuicksilverSlimes, "Allow Quicksilver Slimes in the pool");
-                    slime_allowGlitchSlimes = GUILayout.Toggle(slime_allowGlitchSlimes, "Allow Glitch Slimes in the pool");
-                    slime_allowTarr = GUILayout.Toggle(slime_allowTarr, "Allow Tarr in the pool");
-                    slime_allowGlitchTarr = GUILayout.Toggle(slime_allowGlitchTarr, "Allow Glitch Tarr in the pool");
+                    slimeRandomizer.allowLuckySlimes = GUILayout.Toggle(slimeRandomizer.allowLuckySlimes, "Allow Lucky Slimes in the pool");
+                    slimeRandomizer.allowGoldSlimes = GUILayout.Toggle(slimeRandomizer.allowGoldSlimes, "Allow Gold Slimes in the pool");
+                    slimeRandomizer.allowSaberSlimes = GUILayout.Toggle(slimeRandomizer.allowSaberSlimes, "Allow Saber Slimes in the pool");
+                    slimeRandomizer.allowQuicksilverSlimes = GUILayout.Toggle(slimeRandomizer.allowQuicksilverSlimes, "Allow Quicksilver Slimes in the pool");
+                    slimeRandomizer.allowGlitchSlimes = GUILayout.Toggle(slimeRandomizer.allowGlitchSlimes, "Allow Glitch Slimes in the pool");
+                    slimeRandomizer.allowTarr = GUILayout.Toggle(slimeRandomizer.allowTarr, "Allow Tarr in the pool");
+                    slimeRandomizer.allowGlitchTarr = GUILayout.Toggle(slimeRandomizer.allowGlitchTarr, "Allow Glitch Tarr in the pool");
 
                     GUILayout.EndScrollView();
                     GUILayout.EndHorizontal();
                     break;
+
                 case 1: //gordos
                     GUILayout.BeginHorizontal(GUILayout.Height(windowSizeY * 0.8f));
                     scrollViewPosition = GUILayout.BeginScrollView(scrollViewPosition);
@@ -212,29 +165,30 @@ namespace SRRandomizer
                     gordo_randomizeFoodRequirement = GUILayout.Toggle(gordo_randomizeFoodRequirement, "Randomize the amount of food required to pop each Gordo");
                     if(gordo_randomizeFoodRequirement)
                     {
-                        GUILayout.Label("Minimum: " + gordo_minFoodRequirement);
-                        gordo_minFoodRequirement = (int)GUILayout.HorizontalSlider(gordo_minFoodRequirement, 1, gordo_maxFoodRequirement);
-                        GUILayout.Label("Maximum: " + gordo_maxFoodRequirement);
-                        gordo_maxFoodRequirement = (int)GUILayout.HorizontalSlider(gordo_maxFoodRequirement, gordo_minFoodRequirement, 100);
+                        GUILayout.Label("Minimum: " + gordoRandomizer.minFoodRequirement);
+                        gordoRandomizer.minFoodRequirement = (int)GUILayout.HorizontalSlider(gordoRandomizer.minFoodRequirement, 1, gordoRandomizer.maxFoodRequirement);
+                        GUILayout.Label("Maximum: " + gordoRandomizer.maxFoodRequirement);
+                        gordoRandomizer.maxFoodRequirement = (int)GUILayout.HorizontalSlider(gordoRandomizer.maxFoodRequirement, gordoRandomizer.minFoodRequirement, 100);
                     }
 
                     GUILayout.EndScrollView();
                     GUILayout.EndHorizontal();
                     break;
+
                 case 2: //diets
                     GUILayout.BeginHorizontal(GUILayout.Height(windowSizeY * 0.8f));
                     scrollViewPosition = GUILayout.BeginScrollView(scrollViewPosition);
 
-                    diet_enabled = GUILayout.Toggle(diet_enabled, "Enable diet randomization (affects Slimes, Largos, and Gordos)");
-                    if(diet_enabled)
+                    dietEnabled = GUILayout.Toggle(dietEnabled, "Enable diet randomization (affects Slimes, Largos, and Gordos)");
+                    if(dietEnabled)
                     {
-                        diet_changePinkSlimeDiet = GUILayout.Toggle(diet_changePinkSlimeDiet, "Allow the Pink Slime diet to be changed");
+                        slimeDietRandomizer.changePinkSlimeDiet = GUILayout.Toggle(slimeDietRandomizer.changePinkSlimeDiet, "Allow the Pink Slime diet to be changed");
                         //diet_changeGoldSlimeDiet = GUILayout.Toggle(diet_changeGoldSlimeDiet, "Allow the Gold Slime diet to be changed");
                         //diet_changeLuckySlimeDiet = GUILayout.Toggle(diet_changeLuckySlimeDiet, "Allow the Lucky Slime diet to be changed");
-                        diet_allowElderFavorite = GUILayout.Toggle(diet_allowElderFavorite, "Allow Elder Hens/Roostros to be favorite foods");
-                        diet_allowKookadobaFavorite = GUILayout.Toggle(diet_allowKookadobaFavorite, "Allow Kookadobas to be favorite foods");
-                        diet_allowGildedGingerFavorite = GUILayout.Toggle(diet_allowGildedGingerFavorite, "Allow Gilded Gingers to be favorite foods");
-                        diet_allowTofuFavorite = GUILayout.Toggle(diet_allowTofuFavorite, "Allow Spicy Tofu to be favorite foods");
+                        slimeDietRandomizer.allowElderFavorite = GUILayout.Toggle(slimeDietRandomizer.allowElderFavorite, "Allow Elder Hens/Roostros to be favorite foods");
+                        slimeDietRandomizer.allowKookadobaFavorite = GUILayout.Toggle(slimeDietRandomizer.allowKookadobaFavorite, "Allow Kookadobas to be favorite foods");
+                        slimeDietRandomizer.allowGildedGingerFavorite = GUILayout.Toggle(slimeDietRandomizer.allowGildedGingerFavorite, "Allow Gilded Gingers to be favorite foods");
+                        slimeDietRandomizer.allowTofuFavorite = GUILayout.Toggle(slimeDietRandomizer.allowTofuFavorite, "Allow Spicy Tofu to be favorite foods");
                         GUILayout.FlexibleSpace();
                         GUILayout.Label("NOTE: The following Slimes are currently unaffected by diet randomization:");
                         GUILayout.Label("Fire, Glitch, Glitch Tarr, Gold, Lucky, Puddle, Quicksilver, Tarr");
@@ -243,6 +197,7 @@ namespace SRRandomizer
                     GUILayout.EndScrollView();
                     GUILayout.EndHorizontal();
                     break;
+
                 case 3: //produce
                     GUILayout.BeginHorizontal(GUILayout.Height(windowSizeY * 0.8f));
 
@@ -253,14 +208,15 @@ namespace SRRandomizer
                     GUILayout.EndVertical();
 
                     scrollViewPosition = GUILayout.BeginScrollView(scrollViewPosition);
-                    produce_allowGildedGinger = GUILayout.Toggle(produce_allowGildedGinger, "Allow Gilded Gingers in the pool");
-                    produce_allowKookadoba = GUILayout.Toggle(produce_allowKookadoba, "Allow Kookadobas in the pool");
+                    produceRandomizer.allowGildedGinger = GUILayout.Toggle(produceRandomizer.allowGildedGinger, "Allow Gilded Gingers in the pool");
+                    produceRandomizer.allowKookadoba = GUILayout.Toggle(produceRandomizer.allowKookadoba, "Allow Kookadobas in the pool");
                     //allowFruitToVeggie = GUILayout.Toggle(allowFruitToVeggie, "Allow Fruits to be replaced by Veggies");
                     //allowVeggieToFruit = GUILayout.Toggle(allowVeggieToFruit, "Allow Veggies to be replaced by Fruits");
 
                     GUILayout.EndScrollView();
                     GUILayout.EndHorizontal();
                     break;
+
                 default:
                     GUILayout.Label("Something went wrong, you should never see this.");
                     break;
@@ -286,26 +242,8 @@ namespace SRRandomizer
             }
 
             GUILayout.EndHorizontal();
-        }
 
-        #endregion
-
-        #region Pause
-
-        public static void Pause(bool pause)
-        {
-            TimeDirector timeDirector = null;
-            try
-            {
-                timeDirector = SRSingleton<SceneContext>.Instance.TimeDirector;
-            }
-            catch { }
-            if (!timeDirector) return;
-            if (pause)
-            {
-                if (!timeDirector.HasPauser()) timeDirector.Pause();
-            }
-            else timeDirector.Unpause();
+            GUI.DragWindow();
         }
 
         #endregion
@@ -322,12 +260,12 @@ namespace SRRandomizer
 
         private void CommandPrintSlimeMap()
         {
-            if(slimeMap == null)
+            if(slimeRandomizer.slimeMap == null)
             {
                 Log("Please create a slime map first.");
                 return;
             }
-            foreach(KeyValuePair<Identifiable.Id, Identifiable.Id> item in slimeMap)
+            foreach(KeyValuePair<Identifiable.Id, Identifiable.Id> item in slimeRandomizer.slimeMap)
             {
                 Log("Original: " + item.Key.ToString() + ", Replacement: " + item.Value.ToString());
             }
@@ -335,219 +273,45 @@ namespace SRRandomizer
 
         private void CommandPrintProduceMap()
         {
-            if (produceMap == null)
+            if (produceRandomizer.produceMap == null)
             {
                 Log("Please create a produce map first.");
                 return;
             }
-            foreach (KeyValuePair<Identifiable.Id, Identifiable.Id> item in produceMap)
+            foreach (KeyValuePair<Identifiable.Id, Identifiable.Id> item in produceRandomizer.produceMap)
             {
                 Log("Original: " + item.Key.ToString() + ", Replacement: " + item.Value.ToString());
             }
         }
 
         #endregion
-            
-        #region Randomization Setup
+        
+        #region Randomization
 
-        //Takes a seed and sets up everything for randomization
+        // Takes a seed and sets up everything for randomization
+        // Certain things are taken care of by each respective *Randomization class without any action from this method
         private void ApplyRandomization(int seed)
         {
             randomSeed = seed;
             Log("Randomizing using seed " + randomSeed);
 
-            CommandLoadPrefabs();
-
-            slime_randomMode = (RandomMode)slimeRandomModeInput;
-            produce_randomMode = (RandomMode)produceRandomModeInput;
+            slimeRandomizer.randomMode = (RandomMode)slimeRandomModeInput;
+            produceRandomizer.randomMode = (RandomMode)produceRandomModeInput;
 
             /* For consistent randomization for a given seed, we want to create a new Random object for each element that's being randomized separately */
-            /* These methods simply *set up* randomization tables. The replacement is done in separate methods that are called from Harlomony patches */
-            RandomizeSlimeSpawns(new System.Random(seed));
-            RandomizeSlimeDiets(new System.Random(seed));
-            RandomizeProduce(new System.Random(seed));
-            //RandomizeGordos(new System.Random(seed));
+            /* These methods simply *set up* randomization tables. The replacement is done in separate methods that are called from Harmony patches */
+            slimeRandomizer.RandomizeSlimeSpawns(new System.Random(seed));
+            if (dietEnabled)
+                slimeDietRandomizer.RandomizeSlimeDiets(new System.Random(seed));
+
+            produceRandomizer.RandomizeProduce(new System.Random(seed));
 
             //Set up for randomization that needs to be done at runtime
-            runTimeRand = new System.Random(seed);
-        }
-
-        private void RandomizeSlimeSpawns(System.Random rand)
-        {
-            //Build list of allowed slimes
-            allowedSlimes = Identifiable.SLIME_CLASS.ToList(); //get list of all base slimes
-
-            //Remove slime types not allowed by options
-            if (!slime_allowLuckySlimes) allowedSlimes.Remove(Identifiable.Id.LUCKY_SLIME);
-            if (!slime_allowGoldSlimes) allowedSlimes.Remove(Identifiable.Id.GOLD_SLIME);
-            if (!slime_allowSaberSlimes) allowedSlimes.Remove(Identifiable.Id.SABER_SLIME);
-            if (!slime_allowQuicksilverSlimes) allowedSlimes.Remove(Identifiable.Id.QUICKSILVER_SLIME);
-            if (!slime_allowGlitchSlimes) allowedSlimes.Remove(Identifiable.Id.GLITCH_SLIME);
-            if (!slime_allowTarr) allowedSlimes.Remove(Identifiable.Id.TARR_SLIME);
-            if (!slime_allowGlitchTarr) allowedSlimes.Remove(Identifiable.Id.GLITCH_TARR_SLIME);
-            
-            if(slime_randomMode == RandomMode.DISABLED || slime_randomMode == RandomMode.CHAOTIC)
-            {
-                //do nothing; this is handled in GetRandomizedSlime()
-                return;
-            }
-
-            slimeMap = new Dictionary<Identifiable.Id, Identifiable.Id>();
-          
-            //Build Dictionary mapping if in a mapping randomization mode
-            if (slime_randomMode == RandomMode.MAPPED_NODUPES)
-            {
-                CreateRandomMapping(allowedSlimes, slimeMap, rand, false);
-            }
-            else if(slime_randomMode == RandomMode.MAPPED_DUPES)
-            {
-                CreateRandomMapping(allowedSlimes, slimeMap, rand, true);
-            }
-        }
-
-        private void RandomizeSlimeDiets(System.Random rand)
-        {
-            if(!diet_enabled)
-            {
-                return;
-            }
-
-            // Build list of food items that cannot be set as favorite //
-            List<Identifiable.Id> restrictedFavorites = new List<Identifiable.Id>();
-            if (!diet_allowElderFavorite)
-            {
-                restrictedFavorites.Add(Identifiable.Id.ELDER_HEN);
-                restrictedFavorites.Add(Identifiable.Id.ELDER_ROOSTER);
-            }
-            if (!diet_allowGildedGingerFavorite) restrictedFavorites.Add(Identifiable.Id.GINGER_VEGGIE);
-            if (!diet_allowKookadobaFavorite) restrictedFavorites.Add(Identifiable.Id.KOOKADOBA_FRUIT);
-            if (!diet_allowTofuFavorite) restrictedFavorites.Add(Identifiable.Id.SPICY_TOFU);
-            
-
-            // Build list of allowed slime & largo types //
-            SlimeDefinitions slimeDefinitions = SRSingleton<GameContext>.Instance.SlimeDefinitions;
-            List<Identifiable.Id> allowedSlimes = new List<Identifiable.Id>(Identifiable.EATERS_CLASS);
-            
-            //remove slimes from the list that are special cases or have no diet
-            allowedSlimes.Remove(Identifiable.Id.FIRE_SLIME);
-            allowedSlimes.Remove(Identifiable.Id.GLITCH_SLIME);
-            allowedSlimes.Remove(Identifiable.Id.GLITCH_TARR_SLIME);
-            allowedSlimes.Remove(Identifiable.Id.PUDDLE_SLIME);
-            allowedSlimes.Remove(Identifiable.Id.QUICKSILVER_SLIME);
-            allowedSlimes.Remove(Identifiable.Id.TARR_SLIME);
-
-            //remove slimes as specified by options
-            if (!diet_changeGoldSlimeDiet) allowedSlimes.Remove(Identifiable.Id.GOLD_SLIME);
-            if (!diet_changeLuckySlimeDiet) allowedSlimes.Remove(Identifiable.Id.LUCKY_SLIME);
-            if (!diet_changePinkSlimeDiet) allowedSlimes.Remove(Identifiable.Id.PINK_SLIME);
-
-
-            // Handle base slime types //
-            IEnumerable<Identifiable.Id> baseSlimes = from slime in allowedSlimes
-                                                      where slime.ToString().EndsWith("_SLIME")
-                                                      select slime;
-
-            foreach(Identifiable.Id slime in baseSlimes)
-            {
-                SlimeDefinition currSlime = slimeDefinitions.GetSlimeByIdentifiableId(slime);
-
-                Log("Slime: " + currSlime);
-
-                //set new food group
-                SlimeEat.FoodGroup newFoodGroup = PickRandom(VALID_FOOD_GROUPS, rand);
-                currSlime.Diet.MajorFoodGroups = new SlimeEat.FoodGroup[] { newFoodGroup };
-
-                Log("Food group: " + newFoodGroup.ToString());
-
-                //set new favorite food
-                Identifiable.Id newFavoriteFood = Identifiable.Id.NONE;
-                while(newFavoriteFood == Identifiable.Id.NONE || restrictedFavorites.Contains(newFavoriteFood))
-                {
-                    IEnumerable<Identifiable.Id> idClass = null;
-                    if (newFoodGroup == SlimeEat.FoodGroup.FRUIT) idClass = Identifiable.FRUIT_CLASS;
-                    else if (newFoodGroup == SlimeEat.FoodGroup.VEGGIES) idClass = Identifiable.VEGGIE_CLASS;
-                    else if (newFoodGroup == SlimeEat.FoodGroup.MEAT) idClass = Identifiable.MEAT_CLASS;
-                    else
-                    {
-                        Log("Invalid food group in RandomizeSlimeDiets. Applying fallback...");
-                        newFavoriteFood = Identifiable.Id.POGO_FRUIT;
-                        break;
-                    }
-
-                    newFavoriteFood = PickRandom(idClass, rand);
-                }
-
-                Log("Favorite food: " + newFavoriteFood.ToString());
-
-                currSlime.Diet.Favorites = new Identifiable.Id[] { newFavoriteFood };
-            }
-
-
-            // Handle largo types //
-            IEnumerable<Identifiable.Id> largos = from largo in allowedSlimes
-                                                  where largo.ToString().EndsWith("_LARGO")
-                                                  select largo;
-
-            foreach(Identifiable.Id largo in largos)
-            {
-                SlimeDefinition currLargo = slimeDefinitions.GetSlimeByIdentifiableId(largo);
-                if(currLargo.IsLargo && currLargo.BaseSlimes.Length == 2) //coherence check
-                {
-                    currLargo.Diet = SlimeDiet.Combine(currLargo.BaseSlimes[0].Diet, currLargo.BaseSlimes[1].Diet);
-                }
-                else
-                {
-                    Log("Non-largo coming through largo diet randomization? Id: " + largo.ToString());
-                }
-            }
-
-
-            //refresh the EatMap of every slime definition (apply the changes, essentially)
-            slimeDefinitions.RefreshDefinitions();
-        }
-
-        private void RandomizeProduce(System.Random rand)
-        {
-            allowedFruits = Identifiable.FRUIT_CLASS.ToList();
-            allowedVeggies = Identifiable.VEGGIE_CLASS.ToList();
-
-            if (!produce_allowKookadoba) allowedFruits.Remove(Identifiable.Id.KOOKADOBA_FRUIT);
-            if (!produce_allowGildedGinger) allowedVeggies.Remove(Identifiable.Id.GINGER_VEGGIE);
-
-            allowedProduce = new List<Identifiable.Id>();
-            allowedProduce.AddRange(allowedFruits);
-            allowedProduce.AddRange(allowedVeggies);
-
-            if (produce_randomMode == RandomMode.DISABLED || produce_randomMode == RandomMode.CHAOTIC)
-            {
-                return;
-            }
-
-            produceMap = new Dictionary<Identifiable.Id, Identifiable.Id>();
-
-            if(produce_randomMode == RandomMode.MAPPED_NODUPES)
-            {
-                CreateRandomMapping(allowedProduce, produceMap, rand, false);
-            }
-            else if(produce_randomMode == RandomMode.MAPPED_DUPES)
-            {
-                CreateRandomMapping(allowedProduce, produceMap, rand, true);
-            }
-        }
-
-        private void RandomizeGordos(System.Random rand)
-        {
-            /*
-            IEnumerable<GameObject> gordos = lookupDirector.GordoEntries;
-            foreach(GameObject obj in gordos)
-            {
-                Log(obj.ToString());
-            }
-            */
+            runtimeRand = new System.Random(seed);
         }
 
         // Creates a random mapping of the elements in keyList and stores it in mapDict
-        private void CreateRandomMapping<T>(List<T> keyList, Dictionary<T,T> mapDict, System.Random rand, bool allowDupes = false)
+        internal static void CreateRandomMapping<T>(List<T> keyList, Dictionary<T,T> mapDict, System.Random rand, bool allowDupes = false)
         {
             if (!allowDupes)
             {
@@ -577,85 +341,21 @@ namespace SRRandomizer
             }
         }
 
+        internal static int RuntimeRandNext(int max)
+        {
+            return runtimeRand.Next(max);
+        }
+
+        internal static int RuntimeRandNext(int min, int max)
+        {
+            return runtimeRand.Next(min, max);
+        }
+
         //Randomly pick and return an item from the given collection
-        private T PickRandom<T>(IEnumerable<T> items, System.Random rand)
+        internal static T PickRandom<T>(IEnumerable<T> items, System.Random rand)
         {
             int index = rand.Next(items.Count());
             return items.ElementAt(index);
-        }
-
-        #endregion
-        
-        #region Randomization Replacement
-
-        public static GameObject GetRandomizedSlime(GameObject prefab) //currently no largo support, in future this will be added here
-        {
-            if(slimePrefabToId != null && !slimePrefabToId.ContainsKey(prefab.ToString())) //this slime is a largo. for now just return it
-            {
-                return prefab;
-            }
-
-            Identifiable.Id id = slimePrefabToId[prefab.ToString()];
-
-            if (!allowedSlimes.Contains(id)) //this means the slime was excluded via an option, return back the original (don't do anything)
-            {
-                return prefab;
-            }
-
-            switch(slime_randomMode)
-            {
-                case RandomMode.DISABLED: //randomization deactivated
-                    return prefab;
-                case RandomMode.CHAOTIC: //no mapping
-                    return lookupDirector.GetPrefab(allowedSlimes.ElementAt(runTimeRand.Next(allowedSlimes.Count)));
-                case RandomMode.MAPPED_NODUPES: //mapping
-                    return lookupDirector.GetPrefab(slimeMap[slimePrefabToId[prefab.ToString()]]);
-                case RandomMode.MAPPED_DUPES: //also mapping
-                    return lookupDirector.GetPrefab(slimeMap[slimePrefabToId[prefab.ToString()]]);
-                default: //do nothing
-                    Log("Warning: Invalid randomization mode: " + slime_randomMode);
-                    return prefab;
-            }
-        }
-
-        public static GameObject GetRandomizedProduce(GameObject prefab)
-        {
-            if (producePrefabToId != null && !producePrefabToId.ContainsKey(prefab.ToString())) //this... isn't produce? just return it to avoid causing issues
-            {
-                //Log("Non-produce prefab received in GetRandomizedProduce: " + prefab.ToString());
-                return prefab;
-            }
-
-            Identifiable.Id id = producePrefabToId[prefab.ToString()];
-            if (!allowedProduce.Contains(id)) //this means the produce was excluded via an option, return back the original (don't do anything)
-            {
-                return prefab;
-            }
-
-            switch (produce_randomMode)
-            {
-                case RandomMode.DISABLED: //randomization deactivated
-                    return prefab;
-                case RandomMode.CHAOTIC: //no mapping
-                    return lookupDirector.GetPrefab(allowedProduce.ElementAt(runTimeRand.Next(allowedProduce.Count)));
-                case RandomMode.MAPPED_NODUPES: //mapping
-                    return lookupDirector.GetPrefab(produceMap[producePrefabToId[prefab.ToString()]]);
-                case RandomMode.MAPPED_DUPES: //also mapping
-                    return lookupDirector.GetPrefab(produceMap[producePrefabToId[prefab.ToString()]]);
-                default: //do nothing
-                    Log("Warning: Invalid randomization mode: " + slime_randomMode);
-                    return prefab;
-            }
-        }
-
-        public static GameObject GetRandomizedGordo()
-        {
-            return null;
-        }
-
-        public static int GetRandomizedGordoFoodTarget()
-        {
-            return runTimeRand.Next(gordo_minFoodRequirement, gordo_maxFoodRequirement+1);
         }
 
         #endregion
@@ -663,9 +363,10 @@ namespace SRRandomizer
 
     public enum RandomMode
     {
-        DISABLED,
-        CHAOTIC,
-        MAPPED_NODUPES,
-        MAPPED_DUPES
+        DISABLED,           // Randomization disabled
+        CHAOTIC,            // Every instance of this identifiable is randomized
+        MAPPED_NODUPES,     // 1-to-1 mapped; each identifiable is mapped to 1 other and there cannot be duplicate mappings
+        MAPPED_DUPES,       // ?-to-? mapped; each identifiable is mapped to 1 other and there can be duplicates
+        SWAPS               // TODO: Like 1-to-1 mapped, but identifiables are randomly swapped instead of shuffled
     }
 }

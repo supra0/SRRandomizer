@@ -22,7 +22,7 @@ namespace SRRandomizer.Patches
             }
 
             GordoEat gordoEat = gordoObj.GetComponent<GordoEat>();
-            gordoEat.targetCount = SRRandomizer.GetRandomizedGordoFoodTarget();
+            gordoEat.targetCount = SRRandomizer.gordoRandomizer.GetRandomizedGordoFoodTarget();
 
             //SlimeDefinitions slimeDefinitions = SRSingleton<GameContext>.Instance.SlimeDefinitions;
             //gordoEat.slimeDefinition = slimeDefinitions.GetSlimeByIdentifiableId(Identifiable.Id.TABBY_SLIME);
