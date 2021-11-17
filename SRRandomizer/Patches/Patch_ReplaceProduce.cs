@@ -27,6 +27,13 @@ namespace SRRandomizer.Patches
 
             SpawnResource sr = (SpawnResource)part;
 
+            // Prevent Garden replacement
+            // Wild produce has a CellDirector component in its parents, Gardens don't. Use this fact to differentiate between wild crops and gardens
+            if (!SRRandomizer.produceRandomizer.randomizeGardens && sr.GetComponentInParent<CellDirector>() == null)
+            {
+                return;
+            }
+
             for(int i = 0; i < sr.ObjectsToSpawn.Length; i++)
             {
                 sr.ObjectsToSpawn[i] = SRRandomizer.produceRandomizer.GetRandomizedProduce(sr.ObjectsToSpawn[i]);

@@ -8,7 +8,7 @@ using HarmonyLib;
 
 namespace SRRandomizer
 {
-    [UMFHarmony(3)]
+    [UMFHarmony(4)]
     [UMFScript]
     class SRRandomizer : MonoBehaviour
     {
@@ -42,7 +42,9 @@ namespace SRRandomizer
         private static readonly GUIContent mappedContent = new GUIContent { image = null, text = "1-to-1 Replacement", tooltip = "Every object type is replaced with another, with every type being represented exactly once." };
         private static readonly GUIContent mappedDupesContent = new GUIContent { image = null, text = "?-to-? Replacement", tooltip = "Every object type is replaced with another, but duplicates are allowed. Not all types may be represented." };
         private static readonly GUIContent[] selectionContents = {disabledContent, chaoticContent, mappedContent, mappedDupesContent};
-        private static readonly string[] toolbarTabTexts = { "Slimes", "Gordos", "Diets", "Produce" };
+        private static readonly string[] toolbarTabTexts = { "Slimes", "Gordos", "Diets", "Food", "Statues" };
+
+        private static readonly GUIStyle LABEL_STYLE_BOLD = new GUIStyle();
 
         private static int currentToolbarTab;
         private static string seedInput;
@@ -79,6 +81,10 @@ namespace SRRandomizer
             UMFGUI.RegisterCommand("srr_listslimes", "srr_listslimes", new string[] { "listslimes" }, 0, "Test command, prints all slime types.", CommandListSlimes);
             UMFGUI.RegisterCommand("srr_printslimemap", "srr_printslimemap", new string[] { "printslimemap" }, 0, "Prints the current random slime map.", CommandPrintSlimeMap);
             UMFGUI.RegisterCommand("srr_printproducemap", "srr_printproducemap", new string[] { "printproducemap" }, 0, "Prints the current random produce map.", CommandPrintProduceMap);
+
+            LABEL_STYLE_BOLD.fontSize = 16;
+            LABEL_STYLE_BOLD.fontStyle = FontStyle.Bold;
+            LABEL_STYLE_BOLD.normal.textColor = Color.white;
 
             slimeRandomizer = new SlimeRandomizer();
             slimeDietRandomizer = new SlimeDietRandomizer();
@@ -146,13 +152,20 @@ namespace SRRandomizer
 
                     scrollViewPosition = GUILayout.BeginScrollView(scrollViewPosition);
 
-                    slimeRandomizer.allowLuckySlimes = GUILayout.Toggle(slimeRandomizer.allowLuckySlimes, "Allow Lucky Slimes in the pool");
-                    slimeRandomizer.allowGoldSlimes = GUILayout.Toggle(slimeRandomizer.allowGoldSlimes, "Allow Gold Slimes in the pool");
-                    slimeRandomizer.allowSaberSlimes = GUILayout.Toggle(slimeRandomizer.allowSaberSlimes, "Allow Saber Slimes in the pool");
-                    slimeRandomizer.allowQuicksilverSlimes = GUILayout.Toggle(slimeRandomizer.allowQuicksilverSlimes, "Allow Quicksilver Slimes in the pool");
-                    slimeRandomizer.allowGlitchSlimes = GUILayout.Toggle(slimeRandomizer.allowGlitchSlimes, "Allow Glitch Slimes in the pool");
-                    slimeRandomizer.allowTarr = GUILayout.Toggle(slimeRandomizer.allowTarr, "Allow Tarr in the pool");
-                    slimeRandomizer.allowGlitchTarr = GUILayout.Toggle(slimeRandomizer.allowGlitchTarr, "Allow Glitch Tarr in the pool");
+                    GUILayout.Label("Slime types allowed to be randomized:", LABEL_STYLE_BOLD);
+                    slimeRandomizer.allowFireSlimes = GUILayout.Toggle(slimeRandomizer.allowFireSlimes, "Fire Slimes");
+                    slimeRandomizer.allowLuckySlimes = GUILayout.Toggle(slimeRandomizer.allowLuckySlimes, "Lucky Slimes");
+                    slimeRandomizer.allowGoldSlimes = GUILayout.Toggle(slimeRandomizer.allowGoldSlimes, "Gold Slimes");
+                    slimeRandomizer.allowSaberSlimes = GUILayout.Toggle(slimeRandomizer.allowSaberSlimes, "Saber Slimes (may make other slime(s) unobtainable in 1-to-1 or ?-to-?)");
+                    slimeRandomizer.allowQuicksilverSlimes = GUILayout.Toggle(slimeRandomizer.allowQuicksilverSlimes, "Quicksilver Slimes (may break Mochi minigame)");
+                    slimeRandomizer.allowGlitchSlimes = GUILayout.Toggle(slimeRandomizer.allowGlitchSlimes, "Glitch Slimes (may break Viktor minigame)");
+                    slimeRandomizer.allowTarr = GUILayout.Toggle(slimeRandomizer.allowTarr, "Tarr");
+                    slimeRandomizer.allowGlitchTarr = GUILayout.Toggle(slimeRandomizer.allowGlitchTarr, "Glitch Tarr");
+
+                    GUILayout.Label("\nLargo Settings", LABEL_STYLE_BOLD);
+                    slimeRandomizer.randomizeLargos = GUILayout.Toggle(slimeRandomizer.randomizeLargos, "Randomize largo spawns");
+                    slimeRandomizer.largoPreserveBase = GUILayout.Toggle(slimeRandomizer.largoPreserveBase, "Always preserve 1 base slime type");
+                    //slimeRandomizer.largoRandomFeral = GUILayout.Toggle(slimeRandomizer.largoRandomFeral, "Randomly decide if a largo is feral");
 
                     GUILayout.EndScrollView();
                     GUILayout.EndHorizontal();
@@ -190,7 +203,7 @@ namespace SRRandomizer
                         slimeDietRandomizer.allowGildedGingerFavorite = GUILayout.Toggle(slimeDietRandomizer.allowGildedGingerFavorite, "Allow Gilded Gingers to be favorite foods");
                         slimeDietRandomizer.allowTofuFavorite = GUILayout.Toggle(slimeDietRandomizer.allowTofuFavorite, "Allow Spicy Tofu to be favorite foods");
                         GUILayout.FlexibleSpace();
-                        GUILayout.Label("NOTE: The following Slimes are currently unaffected by diet randomization:");
+                        GUILayout.Label("NOTE: The following Slimes are unaffected by diet randomization:");
                         GUILayout.Label("Fire, Glitch, Glitch Tarr, Gold, Lucky, Puddle, Quicksilver, Tarr");
                     }
 
@@ -204,14 +217,18 @@ namespace SRRandomizer
                     GUILayout.BeginVertical(GUILayout.Width(100));
                     GUILayout.Label("Randomization Mode");
                     produceRandomModeInput = GUILayout.SelectionGrid(produceRandomModeInput, selectionContents, 1);
-                    GUILayout.Label(GUI.tooltip);
                     GUILayout.EndVertical();
 
                     scrollViewPosition = GUILayout.BeginScrollView(scrollViewPosition);
-                    produceRandomizer.allowGildedGinger = GUILayout.Toggle(produceRandomizer.allowGildedGinger, "Allow Gilded Gingers in the pool");
-                    produceRandomizer.allowKookadoba = GUILayout.Toggle(produceRandomizer.allowKookadoba, "Allow Kookadobas in the pool");
+
+                    GUILayout.Label("Food types allowed to be randomized:", LABEL_STYLE_BOLD);
+                    produceRandomizer.allowGildedGinger = GUILayout.Toggle(produceRandomizer.allowGildedGinger, "Allow Gilded Gingers");
+                    produceRandomizer.allowKookadoba = GUILayout.Toggle(produceRandomizer.allowKookadoba, "Allow Kookadobas");
                     //allowFruitToVeggie = GUILayout.Toggle(allowFruitToVeggie, "Allow Fruits to be replaced by Veggies");
                     //allowVeggieToFruit = GUILayout.Toggle(allowVeggieToFruit, "Allow Veggies to be replaced by Fruits");
+
+                    GUILayout.Label("Other options:", LABEL_STYLE_BOLD);
+                    produceRandomizer.randomizeGardens = GUILayout.Toggle(produceRandomizer.randomizeGardens, "Randomize Gardens");
 
                     GUILayout.EndScrollView();
                     GUILayout.EndHorizontal();

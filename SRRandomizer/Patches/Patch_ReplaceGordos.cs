@@ -12,7 +12,7 @@ namespace SRRandomizer.Patches
 
     [HarmonyPatch(typeof(GameModel))]
     [HarmonyPatch("RegisterGordo")]
-    class Patch_ReplaceGordos
+    static class Patch_ReplaceGordos
     {
         static void Prefix(ref GameObject gordoObj)
         {

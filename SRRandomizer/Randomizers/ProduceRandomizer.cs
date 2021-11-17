@@ -17,8 +17,14 @@ namespace SRRandomizer
         public bool allowKookadoba;
 
         // Fruit <-> Veggie
+        // Currently unused, to be used in a future update
         public bool allowFruitToVeggie;
         public bool allowVeggieToFruit;
+
+        // Randomize Gardens
+        // If enabled, a garden will produce a random food based on what was shot into it (or in the case of chaotic mode, completely randomly)
+        // Only checked in Patch_ReplaceProduce
+        public bool randomizeGardens;
         #endregion
 
         #region Randomization Variables
