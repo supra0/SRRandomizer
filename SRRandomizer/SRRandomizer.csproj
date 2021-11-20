@@ -52,6 +52,16 @@
 	  <Private>False</Private>
 	  <SpecificVersion>false</SpecificVersion>
 	</Reference>
+	<Reference Include="UnityEngine.UI">
+	    <HintPath>$(GamePath)$(ManagedFolder)UnityEngine.UI.dll</HintPath>
+	    <Private>False</Private>
+	    <SpecificVersion>false</SpecificVersion>
+	</Reference>
+	<Reference Include="UnityEngine.TextMeshPro">
+	  <HintPath>$(GamePath)$(ManagedFolder)Unity.TextMeshPro.dll</HintPath>
+	  <Private>False</Private>
+	  <SpecificVersion>false</SpecificVersion>
+	</Reference>
     <Reference Include="0Harmony">
       <HintPath>$(GamePath)uModFramework\Lib\net462\0Harmony.dll</HintPath>
       <Private>False</Private>

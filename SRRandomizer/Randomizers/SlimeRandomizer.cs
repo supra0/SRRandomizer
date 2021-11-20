@@ -148,7 +148,7 @@ namespace SRRandomizer
 
         private GameObject GetRandomizedLargo(GameObject prefab)
         {
-            SRRandomizer.Log(prefab.ToString());
+            //SRRandomizer.Log(prefab.ToString());
             
             // Get the base slimes from the largo
             SlimeEat eat = prefab.GetComponent<SlimeEat>();
@@ -259,26 +259,6 @@ namespace SRRandomizer
                 return prefab;
             }
 
-            /*
-             * Calling feral.IsFeral() throws a NullReferenceException, I guess because the model in SlimeFeral is null?
-             * Very helpfully, the stack trace says the source is my function rather than IsFeral
-             * Seems like the spawner is what determines feral-ness, so I should patch it there instead
-             * 
-            // Store whether the original largo was feral
-            SlimeFeral feral = prefab.GetComponent<SlimeFeral>();
-
-            bool wasFeral = false;
-
-            if (feral == null)
-            {
-                SRRandomizer.Log("WARNING: No SlimeFeral component on largo\n" + prefab.ToString());
-                return prefab;
-            }
-
-
-            bool wasFeral = feral.IsFeral();
-            */
-
             // It's possible both bases end up being the same
             // In this case, just return the original
             if(newBase1 == newBase2)
@@ -296,14 +276,12 @@ namespace SRRandomizer
 
             GameObject newLargo = SRSingleton<GameContext>.Instance.LookupDirector.GetPrefab(newId);
 
-            //if(wasFeral) newLargo.GetComponent<SlimeFeral>().SetFeral();
-
             return newLargo;
         }
 
         private Identifiable.Id PickLargoBase(Identifiable.Id original)
         {
-            SRRandomizer.Log("PickLargoBase: " + original.ToString());
+            //SRRandomizer.Log("PickLargoBase: " + original.ToString());
 
             switch (randomMode)
             {

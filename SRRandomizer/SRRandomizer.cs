@@ -8,16 +8,10 @@ using HarmonyLib;
 
 namespace SRRandomizer
 {
-    [UMFHarmony(4)]
+    [UMFHarmony(5)]
     [UMFScript]
     class SRRandomizer : MonoBehaviour
     {
-
-        #region General Variables
-
-        private static LookupDirector lookupDirector;
-
-        #endregion
         #region  Randomization Variables
 
         private static int randomSeed;
@@ -27,6 +21,7 @@ namespace SRRandomizer
         public static ProduceRandomizer produceRandomizer;
         public static SlimeDietRandomizer slimeDietRandomizer;
         public static GordoRandomizer gordoRandomizer;
+        public static StatueRandomizer statueRandomizer;
 
         #endregion
         #region GUI Variables
@@ -41,7 +36,7 @@ namespace SRRandomizer
         private static readonly GUIContent chaoticContent = new GUIContent { image = null, text = "Chaotic", tooltip = "Every object is completely randomized." };
         private static readonly GUIContent mappedContent = new GUIContent { image = null, text = "1-to-1 Replacement", tooltip = "Every object type is replaced with another, with every type being represented exactly once." };
         private static readonly GUIContent mappedDupesContent = new GUIContent { image = null, text = "?-to-? Replacement", tooltip = "Every object type is replaced with another, but duplicates are allowed. Not all types may be represented." };
-        private static readonly GUIContent[] selectionContents = {disabledContent, chaoticContent, mappedContent, mappedDupesContent};
+        private static readonly GUIContent[] selectionContents = { disabledContent, chaoticContent, mappedContent };
         private static readonly string[] toolbarTabTexts = { "Slimes", "Gordos", "Diets", "Food", "Statues" };
 
         private static readonly GUIStyle LABEL_STYLE_BOLD = new GUIStyle();
@@ -90,6 +85,7 @@ namespace SRRandomizer
             slimeDietRandomizer = new SlimeDietRandomizer();
             produceRandomizer = new ProduceRandomizer();
             gordoRandomizer = new GordoRandomizer();
+            statueRandomizer = new StatueRandomizer();
         }
 
         public static void Pause(bool pause)
@@ -146,8 +142,10 @@ namespace SRRandomizer
                     GUILayout.BeginHorizontal(GUILayout.Height(windowSizeY * 0.8f));
 
                     GUILayout.BeginVertical(GUILayout.Width(100));
+
                     GUILayout.Label("Randomization Mode");
                     slimeRandomModeInput = GUILayout.SelectionGrid(slimeRandomModeInput, selectionContents, 1);
+
                     GUILayout.EndVertical();
 
                     scrollViewPosition = GUILayout.BeginScrollView(scrollViewPosition);
@@ -211,7 +209,7 @@ namespace SRRandomizer
                     GUILayout.EndHorizontal();
                     break;
 
-                case 3: //produce
+                case 3: //food
                     GUILayout.BeginHorizontal(GUILayout.Height(windowSizeY * 0.8f));
 
                     GUILayout.BeginVertical(GUILayout.Width(100));
@@ -232,6 +230,27 @@ namespace SRRandomizer
 
                     GUILayout.EndScrollView();
                     GUILayout.EndHorizontal();
+                    break;
+
+                case 4: //plort statues
+                    scrollViewPosition = GUILayout.BeginScrollView(scrollViewPosition);
+
+                    GUILayout.Label("General Settings", LABEL_STYLE_BOLD);
+                    statueRandomizer.ensureCompletable = GUILayout.Toggle(statueRandomizer.ensureCompletable, "Ensure statues will be fillable without glitches or cheats");
+                    GUILayout.Label("Note: Has no effect if slime randomization is set to Chaotic");
+
+                    GUILayout.Label("Ruins Gate", LABEL_STYLE_BOLD);
+                    statueRandomizer.randomizeRuins = GUILayout.Toggle(statueRandomizer.randomizeRuins, "Randomize Ruins gate statues") || statueRandomizer.ensureCompletable;
+
+                    GUILayout.Label("Desert Portal", LABEL_STYLE_BOLD);
+                    statueRandomizer.randomizeDesert = GUILayout.Toggle(statueRandomizer.randomizeDesert, "Randomize Desert portal statues") || statueRandomizer.ensureCompletable;
+                    //statueRandomizer.desertSinglePlort = GUILayout.Toggle(statueRandomizer.desertSinglePlort, "Make each Desert statue require the same plort");
+                    //statueRandomizer.desertPortalDifferent = GUILayout.Toggle(statueRandomizer.desertPortalDifferent, "If possible, make all desert statue plorts different from ruins gate plorts") && statueRandomizer.randomizeDesert;
+
+                    GUILayout.Label("Allowed Plorts", LABEL_STYLE_BOLD);
+                    statueRandomizer.allowGoldPlort = GUILayout.Toggle(statueRandomizer.allowGoldPlort, "Gold Plort");
+                    statueRandomizer.allowSaberPlort = GUILayout.Toggle(statueRandomizer.allowSaberPlort, "Saber Plort");
+                    GUILayout.EndScrollView();
                     break;
 
                 default:
@@ -302,7 +321,32 @@ namespace SRRandomizer
         }
 
         #endregion
-        
+
+        #region Update
+        public void Update()
+        {
+            if(!Levels.isSpecial() && !Levels.isMainMenu())
+            {
+                // If player is targeting a plort statue, show the needed plort on screen where the name of the currently targeted object is normally shown
+                GameObject target = SRSingleton<SceneContext>.Instance.PlayerState.Targeting;
+                if(target != null)
+                {
+                    PuzzleSlot slot = target.GetComponent<PuzzleSlot>();
+                    if (slot != null)
+                    {
+                        TargetingUI targetUI = SRSingleton<TargetingUI>.Instance;
+                        typeof(TargetingUI).GetField("currentTarget", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(targetUI, target); // overwrite the currently targeted object
+
+                        // Set appropriate text for the needed object
+                        targetUI.nameText.text = Identifiable.GetName(slot.catchId);
+                        targetUI.infoText.text = String.Empty;
+                        targetUI.nameText.enabled = true; // make sure the text actually shows (if it wasn't already enabled before looking at the statue, it won't become enabled until after looking away from it)
+                    }
+                }
+            }
+        }
+        #endregion
+
         #region Randomization
 
         // Takes a seed and sets up everything for randomization
@@ -322,6 +366,8 @@ namespace SRRandomizer
                 slimeDietRandomizer.RandomizeSlimeDiets(new System.Random(seed));
 
             produceRandomizer.RandomizeProduce(new System.Random(seed));
+
+            statueRandomizer.RandomizeStatues(new System.Random(seed));
 
             //Set up for randomization that needs to be done at runtime
             runtimeRand = new System.Random(seed);

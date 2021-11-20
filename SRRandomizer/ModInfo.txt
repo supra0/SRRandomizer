@@ -11,19 +11,17 @@ Patch Notes:
 (See the releases page on Github for formatted patch notes)
 
 Version 0.3
-x- Added option to display amount of food required by a Gordo when looking at it
-x- Added plort statue randomization
-x- Added option to ensure it is possible to complete the game without glitches (i.e. you will always have access to the slimes neccessary to open the plort statues)
-- Added largo randomization
-- Added option to always preserve 1 of the base slime types of randomized largos
+- Added plort statue randomization
+- Added option to ensure it is possible to complete the game without glitches (i.e. you will always have access to the slimes neccessary to open the plort statues)
+- Added largo spawn randomization
 - Made Fire Slime randomization optional
-
-- Food shot into a garden no longer changes to a different type of food (but there's a new setting that optionally preserves this behavior, off by default)
+- Food shot into a garden no longer changes to a different type of food (but there's a new setting that preserves this behavior, off by default)
 - Slimes spawned by firestorms now affected by slime randomization
 - Settings window is now draggable
 - Slight polish to certain areas of GUI
 - Renamed "Produce" tab to "Food"
 - Restructured codebase to make future updates easier and to work towards saveable options and presets
+- Removed ?-to-? mapping. Was a confusing, not very fun option and incompatible with plort statue randomization
 
 Version 0.2.1
 - Fixed diet randomization being applied even when disabled
