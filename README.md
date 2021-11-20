@@ -6,11 +6,13 @@ The safety of your save files cannot be guaranteed, use this mod at your own ris
 # Features
 Randomize the following game elements:
 * Slime types
+* Largo spawns
 * Produce types
 * Slime diets
 * Gordo food requirement
+* Plort statues
 
-Plus, 3 different randomization modes and many options.
+Plus, 2 different randomization modes and many options.
 
 More features will be added as development continues.
 
